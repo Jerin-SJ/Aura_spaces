@@ -4,9 +4,10 @@
   import path from 'path';
 
   export default defineConfig({
-    base: '/Aura_spaces/', 
+
 
     plugins: [react()],
+    base: '/Aura_spaces/', 
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
