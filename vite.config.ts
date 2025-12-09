@@ -7,7 +7,7 @@
 
 
     plugins: [react()],
-    base: '/Aura_spaces/', 
+    base: './', 
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
