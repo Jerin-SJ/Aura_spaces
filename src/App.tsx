@@ -47,13 +47,19 @@ import newLivingRoomImage from 'figma:asset/d8e50e5dce3cdc923e2cf67e04f0dcf9c0f2
 import { useState, useEffect } from 'react'
 import Heading from './imports/Heading1'
 import PriceEstimator from './components/PriceEstimator'
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import KitchenEstimatorApp from './components/kitchen-estimator/KitchenEstimatorApp';
 
-export default function App() {
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyHZ9F5ykPQNhLzRXroqz0VAkrYbsy0JNsEzhNM4QbiBA/exec";
+
+function AuraHome() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isFormSubmitted, setIsFormSubmitted] = useState(false)
   const [scrollOpacity, setScrollOpacity] = useState(1)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isNavHovered, setIsNavHovered] = useState(false)
+  const [mobileValue, setMobileValue] = useState('')
+  const [status, setStatus] = useState('')
   const [heroScrollProgress, setHeroScrollProgress] = useState(0)
   const [servicesScrollProgress, setServicesScrollProgress] = useState(0)
   
@@ -70,9 +76,32 @@ export default function App() {
     setIsMobileMenuOpen(false)
   }
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const form = e.currentTarget
+    const fd = new FormData(form)
+
+    // Honeypot: if filled, ignore
+    if ((fd.get('company') as string)?.length) return
+
+    const data = Object.fromEntries(fd.entries())
+
+    setStatus('Sending…')
+    setIsFormSubmitted(false)
+
+    try {
+      await fetch(ENDPOINT, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      })
+    } catch (err) {
+      console.warn('Submit error (request may still have been received):', err)
+    }
+
     setIsFormSubmitted(true)
+    setStatus('')
+    form.reset()
+    setMobileValue('')
   }
   
   // Handler for image uploads
@@ -191,13 +220,13 @@ export default function App() {
                 >
                   About Us
                 </a>
-                <a 
-                  href="#price-estimator" 
-                  className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 px-5 py-2 whitespace-nowrap" 
+                <Link
+                  to="/price-estimator"
+                  className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 px-5 py-2 whitespace-nowrap"
                   style={{ fontFamily: 'Parkinsans, sans-serif', fontSize: '15px' }}
                 >
                   Price Estimator
-                </a>
+                </Link>
                 <a 
                   href="#aura-decor" 
                   className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 px-5 py-2 whitespace-nowrap" 
@@ -242,14 +271,14 @@ export default function App() {
                     >
                       About Us
                     </a>
-                    <a 
-                      href="#price-estimator" 
-                      className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 py-2" 
+                    <Link
+                      to="/price-estimator"
+                      className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 py-2"
                       style={{ fontFamily: 'Parkinsans, sans-serif' }}
                       onClick={closeMobileMenu}
                     >
                       Price Estimator
-                    </a>
+                    </Link>
                     <a 
                       href="#aura-decor" 
                       className="text-[#EEE7D2] hover:text-[#D97A43] transition-all duration-300 py-2" 
@@ -1176,47 +1205,72 @@ Carefully selected wall and accent pieces that bring character, balance, and vis
                 <>
                   <h3 className="text-2xl mb-8 font-light text-[#EEE7D2]">Request Consultation</h3>
                   <form className="space-y-6" onSubmit={handleFormSubmit}>
+                    {/* Honeypot field — hidden from real users */}
+                    <input type="text" name="company" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <input 
-                          type="text" 
+                        <input
+                          name="firstName"
+                          type="text"
                           className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] placeholder-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light"
                           placeholder="First Name"
                           required
+                          autoComplete="given-name"
                         />
                       </div>
                       <div>
-                        <input 
-                          type="text" 
+                        <input
+                          name="lastName"
+                          type="text"
                           className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] placeholder-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light"
                           placeholder="Last Name"
                           required
+                          autoComplete="family-name"
                         />
                       </div>
                     </div>
-                    
+
                     <div>
-                      <input 
-                        type="email" 
+                      <input
+                        name="email"
+                        type="email"
                         className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] placeholder-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light"
                         placeholder="Email"
                         required
+                        autoComplete="email"
                       />
                     </div>
 
                     <div>
-                      <input 
-                        type="tel" 
+                      <input
+                        name="mobile"
+                        type="tel"
                         className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] placeholder-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light"
                         placeholder="Phone Number"
                         pattern="^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$|^(\+44\s?1\d{3}|\(?01\d{3}\)?)\s?\d{3}\s?\d{3}$|^(\+44\s?2\d{2}|\(?02\d{2}\)?)\s?\d{4}\s?\d{4}$|^(\+44\s?[1-9]\d{2,4}|\(?0[1-9]\d{2,4}\)?)\s?\d{6}$"
                         title="Please enter a valid UK phone number (e.g., 07123 456789 or +44 7123 456789)"
                         required
+                        autoComplete="tel"
+                        value={mobileValue}
+                        onFocus={(e) => {
+                          if (!e.target.value) setMobileValue('+44 ')
+                        }}
+                        onChange={(e) => {
+                          let v = e.target.value
+                          if (!v.startsWith('+44')) v = '+44 '
+                          const digits = v.replace(/[^\d]/g, '').replace(/^44/, '')
+                          const limited = digits.substring(0, 10)
+                          let formatted = '+44 '
+                          if (limited.length > 0) formatted += limited.substring(0, 4)
+                          if (limited.length > 4) formatted += ' ' + limited.substring(4)
+                          setMobileValue(formatted)
+                        }}
                       />
                     </div>
 
                     <div>
-                      <select className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light" required>
+                      <select name="service" required className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] focus:border-[#D97A43] focus:outline-none transition-colors duration-300 font-light">
                         <option value="" className="bg-[#696A5A] text-[#EEE7D2]">What can we help with?</option>
                         <option value="kitchen" className="bg-[#696A5A] text-[#EEE7D2]">Kitchen design</option>
                         <option value="bedroom" className="bg-[#696A5A] text-[#EEE7D2]">Bedroom design</option>
@@ -1227,14 +1281,19 @@ Carefully selected wall and accent pieces that bring character, balance, and vis
                     </div>
 
                     <div>
-                      <textarea 
+                      <textarea
+                        name="message"
                         rows={4}
                         className="w-full px-0 py-4 bg-transparent border-0 border-b border-[#A88864] text-[#EEE7D2] placeholder-[#EEE7D2] focus:border-[#D97A43] focus:outline-none resize-none transition-colors duration-300 font-light"
                         placeholder="Tell us about your project"
                       ></textarea>
                     </div>
 
-                    <Button type="submit" className="w-full bg-[#D97A43] text-[#EEE7D2] hover:bg-[#D97A43]/90 transition-all duration-300 rounded-full py-4 mt-8">
+                    {status && (
+                      <p className="text-[#EEE7D2]/70 text-sm text-center">{status}</p>
+                    )}
+
+                    <Button type="submit" className="w-full bg-[#D97A43] text-[#EEE7D2] hover:bg-[#D97A43]/90 transition-all duration-300 rounded-full py-4 mt-8 cursor-pointer">
                       Send Message
                     </Button>
                   </form>
@@ -1302,4 +1361,15 @@ Carefully selected wall and accent pieces that bring character, balance, and vis
       </footer>
     </div>
   )
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuraHome />} />
+        <Route path="/price-estimator" element={<KitchenEstimatorApp />} />
+      </Routes>
+    </Router>
+  );
 }
